@@ -10,14 +10,12 @@ import (
     "code.google.com/p/go.net/websocket"
 )
 
-const listenAddr = ":"+os.Getenv("PORT")
-
 func main() {
     fmt.Println("Starting web handler...")
     http.HandleFunc("/", rootHandler)
     fmt.Println("Starting websocket handler...")
     http.Handle("/socket", websocket.Handler(socketHandler))
-    err := http.ListenAndServe(listenAddr, nil)
+    err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
     if err != nil {
         log.Fatal(err)
     }

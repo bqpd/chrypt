@@ -21,10 +21,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
             <img src="https://dl.dropboxusercontent.com/u/4646709/key6.svg" height=50 />
             </div>
         </div>
-        <div id="questions">
-            <div class="newq"> What did we pick up at the grocery store?
-                <p align="right"><input class="answer" /> </div>
-        </div>
+        <div id="questions"></div>
         <div id="detxt" class="textarea"></div>
         <div id="pltxt" class="textarea invisible"></div>
         <div id="textentry"><center><textarea id="input" rows="4" cols="36" autofocus></textarea> </center></div>
