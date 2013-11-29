@@ -1,7 +1,6 @@
 package main
 
 import (
-    "os"
     "fmt"
     "net/http"
    // "html/template"
@@ -37,7 +36,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
     var conn
 
     if (window["WebSocket"]) {
-        conn = new WebSocket("ws://protected-anchorage-9973.herokuapp.com:`+os.Getenv("PORT")+`/socket")
+        var host = location.origin.replace(/^http/, 'ws')
+        conn = new WebSocket(host)
             conn.onclose = function (evt) {
                 addChat("sys", "/sys The connection has closed.") }
             conn.onmessage = function (evt) {
