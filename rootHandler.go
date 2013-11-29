@@ -39,7 +39,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
     var conn
 
     if (window["WebSocket"]) {
-        conn = new WebSocket("ws://localhost:4000/socket")
+        conn = new WebSocket("ws://http://protected-anchorage-9973.herokuapp.com/socket")
             conn.onclose = function (evt) {
                 addChat("sys", "/sys The connection has closed.") }
             conn.onmessage = function (evt) {

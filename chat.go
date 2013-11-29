@@ -9,7 +9,7 @@ import (
     "code.google.com/p/go.net/websocket"
 )
 
-const listenAddr = "localhost:4000"
+const listenAddr = ":"+os.Getenv("PORT")
 
 func main() {
     fmt.Println("Starting web handler...")
@@ -31,7 +31,7 @@ func (s socket) Close() error {
     s.done <- true
     return nil
 }
-
+ github.com/kr/godep
 func socketHandler(ws *websocket.Conn) {
     s := socket{ws, make(chan bool)}
     go match(s)
