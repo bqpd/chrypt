@@ -30,7 +30,7 @@ func (s socket) Close() error {
     s.done <- true
     return nil
 }
- github.com/kr/godep
+
 func socketHandler(ws *websocket.Conn) {
     s := socket{ws, make(chan bool)}
     go match(s)
