@@ -37,7 +37,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
     if (window["WebSocket"]) {
         var host = location.origin.replace(/^http/, 'ws')
-        conn = new WebSocket(host)
+        conn = new WebSocket(host+"/socket")
             conn.onclose = function (evt) {
                 addChat("sys", "/sys The connection has closed.") }
             conn.onmessage = function (evt) {
