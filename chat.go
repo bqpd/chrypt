@@ -77,10 +77,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 <link rel="stylesheet" href="http://necolas.github.com/normalize.css/2.1.3/normalize.css">
 <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/chrypt.css">
 </head>
-<body><div id="chatwindow">
+<body>
+    <div id="chatwindow">
 
         <table id="header"><tr>
-            <td onclick="ShowOrHideQuestions()" class="key">
+            <td onclick="ToggleQuestionsDisplay()" class="key">
                 <img src="https://dl.dropboxusercontent.com/u/4646709/key3.svg" height=20 />
             </td>
             <td id="channel"> socket </td>
@@ -91,14 +92,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
         <div id="detxt" class="textarea"></div>
         <div id="pltxt" class="textarea invisible"></div>
 
-        <div id="textentry"><textarea id="outbox" rows="4" cols="36" autofocus></textarea></div>
+        <div id="textentry"><textarea id="outbox" rows="4" cols="36"></textarea></div>
 
         <table id="tabs"><tr>
-            <td onclick="SwitchTabs()" class="tab"> DECRYPTED </td>
-            <td onclick="SwitchTabs()" class="tab inactive"> ENCRYPTED </td>
+            <td onclick="SwitchViews()" class="tab"> DECRYPTED </td>
+            <td onclick="SwitchViews()" class="tab inactive"> ENCRYPTED </td>
         </tr></table>
 
-</div></body>
+    </div>
+</body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="https://dl.dropboxusercontent.com/u/4646709/aes.js"></script>
 <script src="https://dl.dropboxusercontent.com/u/4646709/sha3.js"></script>
@@ -108,10 +110,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
         outbox = $("#outbox"),
         detext = document.getElementById("detxt"),
         pingSound = new Audio('https://dl.dropboxusercontent.com/u/4646709/ping.wav'),
-        SwitchTabs = function() {
+        SwitchViews = function() {
             $(".tab").toggleClass("inactive")
             $(".textarea").toggleClass("invisible") },
-        ShowOrHideQuestions = function() {
+        ToggleQuestionsDisplay = function() {
             $(".key").toggleClass("selected")
             $("#questions").toggleClass("invisible") }
 
@@ -124,15 +126,19 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
                     outbox.val("") }
             return false } })
 
-    if (window["WebSocket"]) {
-        var host = location.origin.replace(/^http/, 'ws')
-        conn = new WebSocket(host+"/socket")
-            conn.onclose = function (evt) {
-                addChat("me", "/sys The connection has closed.") }
-            conn.onmessage = function (evt) {
-                addChat("them", evt.data) }
-    } else {
-        addChat("me", "/sys Sadly, your browser does not support WebSockets.") }
+    var connectWS = function () {
+        if (window["WebSocket"]) {
+            var host = location.origin.replace(/^http/, 'ws')
+            conn = new WebSocket(host+"/socket")
+                conn.onclose = function (evt) {
+                    addChat("me", "/sys The connection has closed.")
+                    connectWS() }
+                conn.onmessage = function (evt) {
+                    addChat("them", evt.data) }
+        } else {
+            addChat("me", "/sys Sadly, your browser does not support WebSockets.") } }
+
+    connectWS()
 
     var addChat = function(who, cmsg) {
         // Print the exact message received
