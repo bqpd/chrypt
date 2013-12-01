@@ -76,6 +76,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 <meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
 <link rel="stylesheet" href="http://necolas.github.com/normalize.css/2.1.3/normalize.css">
 <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/chrypt.css">
+<title> social secret chat </title>
 </head>
 <body>
     <div id="chatwindow">
@@ -140,6 +141,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
     connectWS()
 
+    outbox.focus( function() { document.title = "social secret chat" })
+
     var addChat = function(who, cmsg) {
         // Print the exact message received
         $("<p class='"+who+"''><b>"+who+": </b>"+cmsg+"</p>").appendTo("#pltxt")
@@ -150,7 +153,9 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
             $("<p class='emote'>"+cmsg+"</p>").appendTo("#detxt")
         } else {
             // If it's not, play a sound and decrypt it.
-            if ( !document.hasFocus() ) { pingSound.play() }
+            if ( !document.hasFocus() ) {
+                pingSound.play()
+                document.title = "(new) social secret chat" }
 
             dmsg = decrypt(cmsg)
             if (dmsg.substring(0,4) === "/me ") {
