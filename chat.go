@@ -74,7 +74,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
-<link rel="stylesheet" href="http://necolas.github.com/normalize.css/2.1.3/normalize.css">
+<link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/normalize.css">
 <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/chrypt.css">
 <title> social secret chat </title>
 </head>
