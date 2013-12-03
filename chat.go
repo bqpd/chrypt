@@ -132,11 +132,11 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
         if (window["WebSocket"]) {
             var host = location.origin.replace(/^http/, 'ws')
             conn = new WebSocket(host+"/socket")
-                conn.onclose = function (evt) {
-                    addChat("me", "/sys The connection has closed.")
-                    connectWS() }
-                conn.onmessage = function (evt) {
-                    addChat("them", evt.data) }
+            conn.onclose = function (evt) {
+                addChat("me", "/sys The connection has closed.")
+                connectWS() }
+            conn.onmessage = function (evt) {
+                addChat("them", evt.data) }
         } else {
             addChat("me", "/sys Sadly, your browser does not support WebSockets.") } }
 
@@ -204,6 +204,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
         var hash = CryptoJS.SHA3(getSecret())
         var decrypted = CryptoJS.AES.decrypt(ciphertext, hash.toString()).toString(CryptoJS.enc.Latin1)
         return decrypted.toString() }
+
+    addChat("sys", "/sys Welcome to socially encrypted chat! Some tips: <br>&nbsp; 1) You can ask the person on the other end of the line a question by starting your chat with '/nq'. For example, '/nq What is my nickname for you?'. The answer to this question is used to encrypt your chat, so those with different answers will be unable to communicate. Your answer never leaves this computer. <br>&nbsp; 2) You can see what you're actually receiving and sending over the line in the 'ENCYPTED' tab.")
 
 </script>
 </html>
