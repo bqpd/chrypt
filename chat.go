@@ -178,9 +178,9 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
                 $("#questions").removeClass("invisible")
             } else {
                 // If it's a regular chat, format it a la gmail
-                dmsg = dmsg.replace(/\*(.+?)\*/g,"<strong>\$1</strong>")
-                dmsg = dmsg.replace(/\_(.+?)\_/g,"<em>\$1</em>")
-                dmsg = dmsg.replace(/\-(.+?)\-/g,"<del>\$1</del>")
+                dmsg = dmsg.replace(/(^| )\*(.+?)\*( |$)/g,"$1<strong>\$2</strong>$3")
+                dmsg = dmsg.replace(/(^| )\_(.+?)\_( |$)/g,"$1<em>\$2</em>$3")
+                dmsg = dmsg.replace(/(^| )\-(.+?)\-( |$)/g,"$1<del>\$2</del>$3")
                 $("<p class='"+who+"'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
             }
 
@@ -202,7 +202,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
     var decrypt = function(ciphertext) {
         var hash = CryptoJS.SHA3(getSecret())
-        var decrypted = CryptoJS.AES.decrypt(ciphertext, hash.toString()).toString(CryptoJS.enc.Latin1)
+        var decrypted = CryptoJS.AES.decrypt(ciphertext, hash.toString()).toString(CryptoJS.enc.Utf8)
         return decrypted.toString() }
 
     addChat("sys", "/sys Welcome to socially encrypted chat! Some tips: <br>&nbsp; 1) You can ask the person on the other end of the line a question by starting your chat with '/nq'. For example, '/nq What is my nickname for you?'. The answer to this question is used to encrypt your chat, so those with different answers will be unable to communicate. Your answer never leaves this computer. <br>&nbsp; 2) You can see what you're actually receiving and sending over the line in the 'ENCYPTED' tab.")
