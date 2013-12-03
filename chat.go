@@ -52,8 +52,8 @@ func match(c io.ReadWriteCloser) {
 
 func chat(a, b io.ReadWriteCloser) {
     fmt.Println("Found a match!")
-    fmt.Fprintln(a, "/sys ...we found one!")
-    fmt.Fprintln(b, "/sys ...we found one!")
+    fmt.Fprint(a, "/sys ...we found one!")
+    fmt.Fprint(b, "/sys ...we found one!")
     errc := make(chan error, 1)
     go cp(a, b, errc)
     go cp(b, a, errc)
@@ -85,7 +85,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
             <td onclick="ToggleQuestionsDisplay()" class="key">
                 <img src="https://dl.dropboxusercontent.com/u/4646709/key3.svg" height=20 />
             </td>
-            <td id="channel"> socket </td>
+            <td id="status"> ● </td>
+            <td id="channel"> </td>
         </tr></table>
 
         <div id="questions"></div>
@@ -150,7 +151,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
         // Is it a system plaintext message?
         if (cmsg.substring(0,5) === "/sys ") {
             cmsg = cmsg.substring(5)
-            $("<p class='emote'>"+cmsg+"</p>").appendTo("#detxt")
+            if (cmsg === "Waiting for a partner...") {
+                $("#status").css({color: "yellow"})  }
+            else if (cmsg === "...we found one!") {
+                $("#status").css({color: "green"})  }
+            else if (cmsg === "The connection has closed.") {
+                $("#status").css({color: "red"})  }
+            else {
+                console.log(cmsg)
+                $("<p class='emote'>"+cmsg+"</p>").appendTo("#detxt")  }
         } else {
             // If it's not, play a sound and decrypt it.
             if ( !document.hasFocus() ) {
