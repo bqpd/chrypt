@@ -74,22 +74,86 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
-<link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/normalize.css">
-<link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/chrypt.css">
-<title> social secret chat </title>
+<link rel="stylesheet" href="https://raw.github.com/necolas/normalize.css/master/normalize.css">
+<style>
+
+body {  color: #222;
+        font-family: Arial, arial;
+        background-color: #707070;
+        font-size: 12.8px; }
+#chatwindow {   margin: 0 auto;
+        width: 20em;
+        border-top: 0.5px solid white; }
+table { width: 100%; 
+        text-align: center;}
+
+#header {   text-align: center;
+            background-color: rgb(64,64,64);
+            color: white;
+            font-size: 2em; }
+#key { width: 30%; cursor: pointer; }
+#status { width: 30%; }
+#channel { color: #aaa; }
+
+.question { font-size: 1.5em;
+            color: rgb(64,64,64);
+            font-weight: 700;
+            background-color: #aaa;
+            padding: 1em;
+            padding-bottom: 0.25em;}
+.answer {   border: none;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 0.5em;
+            color: rgb(64,64,64);
+            -webkit-border-radius: 0.5em;
+            -webkit-border-bottom-right-radius: 0;
+            -moz-border-radius: 0.5em;
+            -moz-border-radius-bottomright: 0;
+            border-radius: 0.5em;
+            border-bottom-right-radius: 0; }
+
+.textarea { background-color: white;
+            word-wrap: break-word;
+            overflow-y: scroll;
+            height: 20em;
+            padding: 0.5em;
+            padding-left: 1.5em;
+            text-indent: -1em; }
+.textarea p { margin: 0.25em; }
+.emote { color: #777; font-style: italic; }
+.timer { color: #aaa; }
+
+#textentry {    text-align: center;
+                background-color: white;
+                padding: 0.25em; }
+
+.tab {  font-size: 0.75em;
+        padding: 0.25em;
+        background-color: white;
+        color: #777;
+        border-bottom: 1px solid #aaa; }
+.inactive { background-color: #aaa;
+            color: white;
+            cursor: pointer; }
+
+.invisible { display: none; }
+.selected { background-color: #76DAFF; }
+
+</style>
+<title> chrypt </title>
 </head>
 <body>
     <div id="chatwindow">
 
         <table id="header"><tr>
-            <td onclick="ToggleQuestionsDisplay()" class="key">
+            <td onclick="ToggleQuestionsDisplay()" id="key">
                 <img src="https://dl.dropboxusercontent.com/u/4646709/key3.svg" height=20 />
             </td>
-            <td id="status"> ● </td>
             <td id="channel"> </td>
+            <td id="status"> ● </td>
         </tr></table>
 
-        <div id="questions"></div>
+        <div id="questionbox"></div>
 
         <div id="detxt" class="textarea"></div>
         <div id="pltxt" class="textarea invisible"></div>
@@ -104,8 +168,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
     </div>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-<script src="https://dl.dropboxusercontent.com/u/4646709/aes.js"></script>
-<script src="https://dl.dropboxusercontent.com/u/4646709/sha3.js"></script>
+<script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
+<script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
 <script>
 
     var conn,
@@ -116,8 +180,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
             $(".tab").toggleClass("inactive")
             $(".textarea").toggleClass("invisible") },
         ToggleQuestionsDisplay = function() {
-            $(".key").toggleClass("selected")
-            $("#questions").toggleClass("invisible") }
+            $("#key").toggleClass("selected")
+            $("#questionbox").toggleClass("invisible") }
 
     outbox.keydown(function (e) {
         if (e.which === 13) {
@@ -172,10 +236,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
                 $("<p class='emote'>"+dmsg+"</p>").appendTo("#detxt")
             } else if (dmsg.substring(0,4) === "/nq ") {
                 dmsg = dmsg.substring(4)
-                $('<div class="question newq">'+dmsg+'<p align="right"><input class="answer" /></div>').appendTo("#questions")
+                $('<div class="question selected">'+dmsg+'<p align="right"><input class="answer" /></div>').appendTo("#questionbox")
                 // Show the questions box
-                $(".key").addClass("selected")
-                $("#questions").removeClass("invisible")
+                $("#key").addClass("selected")
+                $("#questionbox").removeClass("invisible")
             } else {
                 // If it's a regular chat, format it a la gmail
                 dmsg = dmsg.replace(/(^| )\*(.+?)\*( |$)/g,"$1<strong>\$2</strong>$3")
@@ -205,7 +269,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
         var decrypted = CryptoJS.AES.decrypt(ciphertext, hash.toString()).toString(CryptoJS.enc.Utf8)
         return decrypted.toString() }
 
-    addChat("sys", "/sys Welcome to socially encrypted chat! Some tips: <br>&nbsp; 1) You can ask the person on the other end of the line a question by starting your chat with '/nq'. For example, '/nq What is my nickname for you?'. The answer to this question is used to encrypt your chat, so those with different answers will be unable to communicate. Your answer never leaves this computer. <br>&nbsp; 2) You can see what you're actually receiving and sending over the line in the 'ENCYPTED' tab.")
+    addChat("sys", "/sys Welcome to socially encrypted chat! <br><br>&nbsp; 1) By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). The answers to all of your questions are concatenated, hashed, and used as an encryption key, so if you and the other person have different answers you'll be unable to communicate! <br><br>&nbsp; 2) You can see what you're actually receiving and sending in the 'ENCRYPTED' tab.")
 
 </script>
 </html>
