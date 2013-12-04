@@ -95,37 +95,59 @@ table { width: 100%;
 #status { width: 30%; }
 #channel { color: #aaa; }
 
-.question { font-size: 1.5em;
-            color: rgb(64,64,64);
-            font-weight: 700;
-            background-color: #aaa;
-            padding: 1em;
-            padding-bottom: 0.25em;}
-.answer {   border: none;
-            background-color: rgba(255, 255, 255, 0.5);
-            padding: 0.5em;
-            color: rgb(64,64,64);
-            -webkit-border-radius: 0.5em;
-            -webkit-border-bottom-right-radius: 0;
+#questionbox { 
+    background-color: #76DAFF;
+    text-align: right;
+    padding-top: 1.5em;
+    padding-bottom: 0.5em; }
+#showq {
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 0.5em;
+    font-weight: 700;
+    font-size: 0.75 em;
+    color: rgb(64,64,64);
+    cursor: pointer;
+    margin-top: -1em;
+}
+.question { background-color: #aaa;
+            padding: 0.5em 0.35em; 
+            font-size: 1.5em; }
+.question td { color: rgb(64,64,64); }
+.closeq { font-size: 1.5em; cursor: pointer; }
+.submitq { font-size: 1.5em; color: white; opacity: 0; }
+.qbubble {  text-align: left;
+            padding: 0.5em 0.5em;
             -moz-border-radius: 0.5em;
-            -moz-border-radius-bottomright: 0;
+            -webkit-border-radius: 0.5em;
             border-radius: 0.5em;
-            border-bottom-right-radius: 0; }
+            font-weight: 700; }
+.qtxt {     background-color: rgba(255, 255, 255, 0.5);
+            -webkit-border-top-right-radius: 0;
+            -moz-border-radius-topright: 0;
+            border-top-right-radius: 0; }
+.answer {   border: none;
+            background-color: rgba(64, 64, 64, 0.5);
+            color: white;
+            -webkit-border-bottom-left-radius: 0;
+            -moz-border-radius-bottomleft: 0;
+            border-bottom-left-radius: 0;
+            width: 100%; }
 
-.textarea { background-color: white;
+.inbox {    background-color: white;
             word-wrap: break-word;
             overflow-y: scroll;
             height: 20em;
             padding: 0.5em;
             padding-left: 1.5em;
             text-indent: -1em; }
-.textarea p { margin: 0.25em; }
+.inbox p { margin: 0.25em; }
 .emote { color: #777; font-style: italic; }
 .timer { color: #aaa; }
 
-#textentry {    text-align: center;
-                background-color: white;
-                padding: 0.25em; }
+#textentry { padding: 0.35em;  background-color: white; }
+#textentry textarea {   border: 1px solid;
+                        width: 100%;
+                        border-color: #777 #aaa #aaa #aaa;}
 
 .tab {  font-size: 0.75em;
         padding: 0.25em;
@@ -153,12 +175,14 @@ table { width: 100%;
             <td id="status"> ● </td>
         </tr></table>
 
-        <div id="questionbox"></div>
+        <div id="questionbox" style="display:none">
+            <span onclick="showOldQs()" id="showq">show older questions</span><p/>
+        </div>
 
-        <div id="detxt" class="textarea"></div>
-        <div id="pltxt" class="textarea invisible"></div>
+        <div id="detxt" class="inbox"></div>
+        <div id="pltxt" class="inbox invisible"></div>
 
-        <div id="textentry"><textarea id="outbox" rows="4" cols="36"></textarea></div>
+        <div id="textentry"><textarea id="outbox" rows="4"></textarea></div>
 
         <table id="tabs"><tr>
             <td onclick="SwitchViews()" class="tab"> DECRYPTED </td>
@@ -178,10 +202,26 @@ table { width: 100%;
         pingSound = new Audio('https://dl.dropboxusercontent.com/u/4646709/ping.wav'),
         SwitchViews = function() {
             $(".tab").toggleClass("inactive")
-            $(".textarea").toggleClass("invisible") },
+            $(".inbox").toggleClass("invisible") },
         ToggleQuestionsDisplay = function() {
-            $("#key").toggleClass("selected")
-            $("#questionbox").toggleClass("invisible") }
+            $("#key").addClass("selected")
+            $("#questionbox").slideToggle( function() {
+                if ( $('#questionbox').is(':hidden') ) {
+                    $("#key").removeClass("selected")
+                    $( '.question:not(.selected)' ).hide()
+                    $('#showq').text("show older questions")
+                }
+            })
+        },
+        showOldQs = function() {
+            if ($('#showq').text() === "show older questions") {
+                $( '.question:not(.selected)' ).slideDown()
+                $('#showq').text("hide older questions")
+            } else {
+                $( '.question:not(.selected)' ).slideUp()
+                $('#showq').text("show older questions")
+            }
+        }
 
     outbox.keydown(function (e) {
         if (e.which === 13) {
@@ -236,10 +276,17 @@ table { width: 100%;
                 $("<p class='emote'>"+dmsg+"</p>").appendTo("#detxt")
             } else if (dmsg.substring(0,4) === "/nq ") {
                 dmsg = dmsg.substring(4)
-                $('<div class="question selected">'+dmsg+'<p align="right"><input class="answer" /></div>').appendTo("#questionbox")
+                $('<div class="question selected" style="display:none"><table><tr><td class="qtxt qbubble">'+dmsg+'<td class="closeq">&times;<tr><td style="height: 0.35em"><tr><td><input class="answer qbubble"/><td class="submitq">✓</table></div>').appendTo("#questionbox")
+                $('.closeq').click( function(e){
+                    $(this).parents(".question").slideUp(function() { $(this).remove() }) })
+                $('.answer').blur( function(e){ 
+                    $(this).parents(".question").removeClass('selected') })
                 // Show the questions box
-                $("#key").addClass("selected")
-                $("#questionbox").removeClass("invisible")
+                if (!$("#key").hasClass('selected')) {
+                    $('.question.selected').show()
+                    ToggleQuestionsDisplay()
+                } else {
+                    $('.question.selected').slideDown() }
             } else {
                 // If it's a regular chat, format it a la gmail
                 dmsg = dmsg.replace(/(^| )\*(.+?)\*( |$)/g,"$1<strong>\$2</strong>$3")
@@ -269,7 +316,7 @@ table { width: 100%;
         var decrypted = CryptoJS.AES.decrypt(ciphertext, hash.toString()).toString(CryptoJS.enc.Utf8)
         return decrypted.toString() }
 
-    addChat("sys", "/sys Welcome to socially encrypted chat! <br><br>&nbsp; 1) By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). The answers to all of your questions are concatenated, hashed, and used as an encryption key, so if you and the other person have different answers you'll be unable to communicate! <br><br>&nbsp; 2) You can see what you're actually receiving and sending in the 'ENCRYPTED' tab.")
+    addChat("me", "/sys Welcome to socially encrypted chat! <br><br> By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). <br><br> The answers to all questions are concatenated, hashed, and used as an encryption key, so if you and the other person have different answers you'll be unable to communicate. You can see what you're actually receiving and sending in the 'ENCRYPTED' tab.")
 
 </script>
 </html>
