@@ -208,6 +208,7 @@ table { width: 100%;
 /* TODO *\
 on running connectWS, set exponentially growing timeout, with a 'retry' link popping up somewhere
 send keep-alive messages every 30s or so?
+prevent identical clients from connecting to each other
 \*      */
 
     /*
@@ -397,7 +398,7 @@ send keep-alive messages every 30s or so?
     $('#chan').val(subd)
     window.location.hash = subd
 
-    addChat("me", "/sys Welcome to socially encrypted chat! <br><br> By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). <br><br> The answers to all questions are concatenated, hashed, and used as an encryption key, so if your answers are differnt you'll be unable to communicate. <br><br> You can see what you're actually receiving and sending in the 'ENCRYPTED' tab.")
+    addChat("me", "/sys Welcome to socially encrypted chat! <br><br> By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). <br><br> The answers to all questions are concatenated, hashed, and used as an encryption key, so if your answers are different you'll be unable to communicate. <br><br> You can see exactly what you're sending and receiving in the 'ENCRYPTED' tab.")
 
     addChat("me", "/sys Connecting to: "+host+"/socket/"+$('#chan').val())
     
