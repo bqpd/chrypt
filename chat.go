@@ -10,10 +10,8 @@ import (
 )
 
 func main() {
-    fmt.Println("Starting web handler...")
     http.HandleFunc("/", rootHandler)
-    fmt.Println("Starting websocket handler...")
-    http.Handle("/socket", websocket.Handler(socketHandler))
+    http.Handle("/socket/", websocket.Handler(socketHandler))
     err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
     if err != nil {
         log.Fatal(err)
@@ -31,16 +29,17 @@ func (s socket) Close() error {
 }
 
 func socketHandler(ws *websocket.Conn) {
+    fmt.Println("[ws] Starting websocket handler...")
     s := socket{ws, make(chan bool)}
     go match(s)
     <-s.done
-    fmt.Println("Closing websocket handler...")
+    fmt.Println("[ws] ...closing websocket handler.")
 }
 
 var partner = make(chan io.ReadWriteCloser)
 
 func match(c io.ReadWriteCloser) {
-    fmt.Println("Looking for a match...")
+    fmt.Println("[m] Looking for a match...")
     fmt.Fprint(c, "/sys Waiting for a partner...")
     select {
     case partner <- c:
@@ -51,7 +50,7 @@ func match(c io.ReadWriteCloser) {
 }
 
 func chat(a, b io.ReadWriteCloser) {
-    fmt.Println("Found a match!")
+    fmt.Println("[m] ...found a match!")
     fmt.Fprint(a, "/sys ...we found one!")
     fmt.Fprint(b, "/sys ...we found one!")
     errc := make(chan error, 1)
@@ -70,6 +69,7 @@ func cp(w io.Writer, r io.Reader, errc chan<- error) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
+    fmt.Println("[http] Starting web handler...")
     fmt.Fprint(w, `
 <html>
 <head>
@@ -92,8 +92,15 @@ table { width: 100%;
             color: white;
             font-size: 2em; }
 #key { width: 30%; cursor: pointer; }
-#status { width: 30%; }
-#channel { color: #aaa; }
+#status { width: 10%; }
+#chan {
+    text-align: center;
+    border: none;
+    background: none;
+    width: 100%;
+    color: white;
+    font-weight: 700;
+}
 
 #questionbox { 
     background-color: #76DAFF;
@@ -168,11 +175,11 @@ table { width: 100%;
     <div id="chatwindow">
 
         <table id="header"><tr>
+            <td id="status"> ● </td>
+            <td id="channel"> <input id="chan" onkeyup="connectWS()" /></td>
             <td onclick="ToggleQuestionsDisplay()" id="key">
                 <img src="https://dl.dropboxusercontent.com/u/4646709/key3.svg" height=20 />
             </td>
-            <td id="channel"> </td>
-            <td id="status"> ● </td>
         </tr></table>
 
         <div id="questionbox" style="display:none">
@@ -195,8 +202,16 @@ table { width: 100%;
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
 <script>
+    
+    subd = window.location.hash.slice(1)
+    if (subd === "") {
+        subd = Math.random().toString(36).slice(2).substring(0,7)
+    }
+    $('#chan').val(subd)
+    window.location.hash = subd
 
-    var conn,
+    var wholast,
+        conn,
         outbox = $("#outbox"),
         detext = document.getElementById("detxt"),
         pingSound = new Audio('https://dl.dropboxusercontent.com/u/4646709/ping.wav'),
@@ -224,7 +239,7 @@ table { width: 100%;
         }
 
     outbox.keydown(function (e) {
-        if (e.which === 13) {
+        if (e.which === 13 && !e.shiftKey) {
             msg = outbox.val()
                 if (msg) {
                     addChat("me", encrypt(msg))
@@ -235,7 +250,8 @@ table { width: 100%;
     var connectWS = function () {
         if (window["WebSocket"]) {
             var host = location.origin.replace(/^http/, 'ws')
-            conn = new WebSocket(host+"/socket")
+            conn = new WebSocket(host+"/socket/"+$('#chan').val())
+            console.log("Connecting to: "+host+"/socket/"+$('#chan').val())
             conn.onclose = function (evt) {
                 addChat("me", "/sys The connection has closed.")
                 connectWS() }
@@ -249,6 +265,7 @@ table { width: 100%;
     outbox.focus( function() { document.title = "social secret chat" })
 
     var addChat = function(who, cmsg) {
+
         // Print the exact message received
         $("<p class='"+who+"''><b>"+who+": </b>"+cmsg+"</p>").appendTo("#pltxt")
 
@@ -271,6 +288,7 @@ table { width: 100%;
                 document.title = "(new) social secret chat" }
 
             dmsg = decrypt(cmsg)
+            dmsg = dmsg.replace(/\n/g,"<br/>")
             if (dmsg.substring(0,4) === "/me ") {
                 dmsg = dmsg.substring(4)
                 $("<p class='emote'>"+dmsg+"</p>").appendTo("#detxt")
@@ -290,13 +308,18 @@ table { width: 100%;
             } else {
                 // If it's blank, it's probably an encryption error!
                 if (dmsg === '') {
-                    dmsg = "<i>The decrypted message is empty, probably because your questions and answers are not the same.</i>"
+                    dmsg = "<i>The decrypted message is empty, most likely because your answers are not the same.</i>"
                 }
                 // If it's a regular chat, format it a la gmail
                 dmsg = dmsg.replace(/(^| )\*(.+?)\*( |$)/g,"$1<strong>\$2</strong>$3")
                 dmsg = dmsg.replace(/(^| )\_(.+?)\_( |$)/g,"$1<em>\$2</em>$3")
                 dmsg = dmsg.replace(/(^| )\-(.+?)\-( |$)/g,"$1<del>\$2</del>$3")
-                $("<p class='"+who+"'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
+                if (who === wholast) {
+                   $("#detxt p:last").append("<br/> "+dmsg)
+                } else {
+                    wholast = who
+                    $("<p class='"+who+"'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
+                }
             }
 
         // Scroll the textbox to the bottom
