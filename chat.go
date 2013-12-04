@@ -74,7 +74,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
-<link rel="stylesheet" href="https://raw.github.com/necolas/normalize.css/master/normalize.css">
+<link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/normalize.css">
 <style>
 
 body {  color: #222;
@@ -82,8 +82,7 @@ body {  color: #222;
         background-color: #707070;
         font-size: 12.8px; }
 #chatwindow {   margin: 0 auto;
-        width: 20em;
-        border-top: 0.5px solid white; }
+        width: 20em; }
 table { width: 100%; 
         text-align: center;}
 
@@ -92,14 +91,17 @@ table { width: 100%;
             color: white;
             font-size: 2em; }
 #key { width: 30%; cursor: pointer; }
-#status { width: 10%; }
+#status {   width: 10%;
+            padding: 0.25em 0.5em;
+            cursor: default; }
 #chan {
     text-align: center;
     border: none;
     background: none;
-    width: 100%;
+    width: 80%;
     color: white;
     font-weight: 700;
+    cursor: pointer;
 }
 
 #questionbox { 
@@ -143,7 +145,7 @@ table { width: 100%;
 .inbox {    background-color: white;
             word-wrap: break-word;
             overflow-y: scroll;
-            height: 20em;
+            height: 23em;
             padding: 0.5em;
             padding-left: 1.5em;
             text-indent: -1em; }
@@ -174,13 +176,12 @@ table { width: 100%;
 <body>
     <div id="chatwindow">
 
-        <table id="header"><tr>
-            <td id="status"> ● </td>
-            <td id="channel"> <input id="chan" onkeyup="connectWS()" /></td>
-            <td onclick="ToggleQuestionsDisplay()" id="key">
+        <table id="header">
+            <td id="status"> ●
+            <td id="channel"> <input id="chan" onkeyup="connectWS()" spellcheck="false" />
+            <td id="key" onclick="ToggleQuestionsDisplay()">
                 <img src="https://dl.dropboxusercontent.com/u/4646709/key3.svg" height=20 />
-            </td>
-        </tr></table>
+        </table>
 
         <div id="questionbox" style="display:none">
             <span onclick="showOldQs()" id="showq">show older questions</span><p/>
@@ -191,68 +192,85 @@ table { width: 100%;
 
         <div id="textentry"><textarea id="outbox" rows="4"></textarea></div>
 
-        <table id="tabs"><tr>
-            <td onclick="SwitchViews()" class="tab"> DECRYPTED </td>
-            <td onclick="SwitchViews()" class="tab inactive"> ENCRYPTED </td>
-        </tr></table>
+        <table id="tabs">
+            <td onclick="SwitchViews()" class="tab"> DECRYPTED
+            <td onclick="SwitchViews()" class="tab inactive"> ENCRYPTED
+        </table>
 
     </div>
 </body>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
 <script>
-    
-    subd = window.location.hash.slice(1)
-    if (subd === "") {
-        subd = Math.random().toString(36).slice(2).substring(0,7)
-    }
-    $('#chan').val(subd)
-    window.location.hash = subd
 
-    var wholast,
-        conn,
-        outbox = $("#outbox"),
-        detext = document.getElementById("detxt"),
-        pingSound = new Audio('https://dl.dropboxusercontent.com/u/4646709/ping.wav'),
-        SwitchViews = function() {
+/* TODO *\
+on running connectWS, set exponentially growing timeout, with a 'retry' link popping up somewhere
+\*      */
+
+    /*
+     * Event-driven functions *
+                              */
+
+    var SwitchViews = function() {
             $(".tab").toggleClass("inactive")
-            $(".inbox").toggleClass("invisible") },
-        ToggleQuestionsDisplay = function() {
-            $("#key").addClass("selected")
-            $("#questionbox").slideToggle( function() {
-                if ( $('#questionbox').is(':hidden') ) {
-                    $("#key").removeClass("selected")
-                    $( '.question:not(.selected)' ).hide()
-                    $('#showq').text("show older questions")
-                }
-            })
+            $(".inbox").toggleClass("invisible")
         },
-        showOldQs = function() {
-            if ($('#showq').text() === "show older questions") {
-                $( '.question:not(.selected)' ).slideDown()
-                $('#showq').text("hide older questions")
-            } else {
-                $( '.question:not(.selected)' ).slideUp()
+
+    ToggleQuestionsDisplay = function() {
+        $("#key").addClass("selected")
+        $("#questionbox").slideToggle( function() {
+            if ( $("#questionbox").is(":hidden") ) {
+                $("#key").removeClass("selected")
+                $(".question:not(.selected)").hide()
                 $('#showq').text("show older questions")
             }
-        }
+        } )
+    },
 
-    outbox.keydown(function (e) {
+    showOldQs = function() {
+        switch ( $('#showq').text().substring(0,4) ) {
+            case "show":
+                $( '.question:not(.selected)' ).slideDown()
+                $('#showq').text("hide older questions")
+                break
+            case "hide":
+                $( '.question:not(.selected)' ).slideUp()
+                $('#showq').text("show older questions") } }, 
+
+    outbox = $("#outbox")
+    outbox.focus( function() { document.title = "chrypt" } )
+    outbox.keydown( function(e) {
         if (e.which === 13 && !e.shiftKey) {
             msg = outbox.val()
                 if (msg) {
                     addChat("me", encrypt(msg))
                     conn.send(encrypt(msg))
-                    outbox.val("") }
-            return false } })
+                    outbox.val("")
+                }
+            return false
+        }
+    } )
+    
+    $("#questionbox").delegate(".closeq", "click", function() {
+        $(this).parents(".question").slideUp( function() { $(this).remove() } )
+    })
 
-    var connectWS = function () {
+    $("#questionbox").delegate(".answer", "blur", function(){ 
+        $(this).parents(".question").removeClass("selected")
+    })
+
+    /*
+     * Websocket interfacing *
+                             */
+    var host = location.origin.replace(/^http/, "ws"),
+        conn, 
+
+    connectWS = function() {
         if (window["WebSocket"]) {
-            var host = location.origin.replace(/^http/, 'ws')
-            conn = new WebSocket(host+"/socket/"+$('#chan').val())
-            window.location.hash = $('#chan').val()
-            console.log("Connecting to: "+host+"/socket/"+$('#chan').val())
+            conn = new WebSocket(host+"/socket/"+$("#chan").val())
+            window.location.hash = $("#chan").val()
             conn.onclose = function (evt) {
                 addChat("me", "/sys The connection has closed.")
                 connectWS() }
@@ -261,90 +279,129 @@ table { width: 100%;
         } else {
             addChat("me", "/sys Sadly, your browser does not support WebSockets.") } }
 
-    connectWS()
+    /*
+     * Message parsing and display *
+                                   */
+    var statuses = { "Waiting for a partner..." : "yellow",
+                     "...we found one!" : "green",
+                     "The connection has closed." : "red" },
 
-    outbox.focus( function() { document.title = "social secret chat" })
-
-    var addChat = function(who, cmsg) {
-
-        // Print the exact message received
-        $("<p class='"+who+"''><b>"+who+": </b>"+cmsg+"</p>").appendTo("#pltxt")
-
-        // Is it a system plaintext message?
-        if (cmsg.substring(0,5) === "/sys ") {
-            cmsg = cmsg.substring(5)
-            if (cmsg === "Waiting for a partner...") {
-                $("#status").css({color: "yellow"})  }
-            else if (cmsg === "...we found one!") {
-                $("#status").css({color: "green"})  }
-            else if (cmsg === "The connection has closed.") {
-                $("#status").css({color: "red"})  }
+    ciphertext_interpreters = {
+        "/sys ": function(cmsg) {
+            if ( statuses[cmsg] ) {
+                $("#status").css({"color": statuses[cmsg]}) }
             else {
                 console.log(cmsg)
                 $("<p class='emote'>"+cmsg+"</p>").appendTo("#detxt")  }
-        } else {
-            // If it's not, play a sound and decrypt it.
-            if ( !document.hasFocus() ) {
-                pingSound.play()
-                document.title = "(new) social secret chat" }
+        },
 
+        "/plt ": function(cmsg) {
+            $("<p class='"+who+"'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
+        } }, 
+    
+    deciphered_text_interpreters = {
+        "/me " : function(dmsg) {
+            $("<p class='emote'>"+dmsg+"</p>").appendTo("#detxt")
+        },
+
+        "/nq " : function(dmsg) {
+            $("<div class='question selected' style='display:none'><table><tr><td class='qtxt qbubble'>"+dmsg+"<td class='closeq'>&times;<tr><td style='height: 0.35em'><tr><td><input class='answer qbubble'/><td class='submitq'>✓</table></div>").appendTo("#questionbox")
+            // Show the questions box
+            if (!$("#key").hasClass("selected")) {
+                $(".question.selected").show()
+                ToggleQuestionsDisplay()
+            } else {
+                $(".question.selected").slideDown() }
+        } },
+
+    pingSound = new Audio("https://dl.dropboxusercontent.com/u/4646709/ping.wav"),
+    messages_missed = 0,
+    previous_speaker,
+    detext = document.getElementById("detxt"),
+
+    addChat = function(who, cmsg) {
+        // Print the exact message received
+        $("<p class='"+who+"''><b>"+who+": </b>"+cmsg+"</p>").appendTo("#pltxt")
+
+        // If there's a matching ciphertext interpreter, run it and skip the rest.
+        if ( ciphertext_interpreters[cmsg.substring(0,5)] ) {
+            ciphertext_interpreters[cmsg.substring(0,5)](cmsg.substring(5))
+        } else {
+            // Decrypt and translate newlines.
             dmsg = decrypt(cmsg)
             dmsg = dmsg.replace(/\n/g,"<br/>")
-            if (dmsg.substring(0,4) === "/me ") {
-                dmsg = dmsg.substring(4)
-                $("<p class='emote'>"+dmsg+"</p>").appendTo("#detxt")
-            } else if (dmsg.substring(0,4) === "/nq ") {
-                dmsg = dmsg.substring(4)
-                $('<div class="question selected" style="display:none"><table><tr><td class="qtxt qbubble">'+dmsg+'<td class="closeq">&times;<tr><td style="height: 0.35em"><tr><td><input class="answer qbubble"/><td class="submitq">✓</table></div>').appendTo("#questionbox")
-                $('.closeq').click( function(e){
-                    $(this).parents(".question").slideUp(function() { $(this).remove() }) })
-                $('.answer').blur( function(e){ 
-                    $(this).parents(".question").removeClass('selected') })
-                // Show the questions box
-                if (!$("#key").hasClass('selected')) {
-                    $('.question.selected').show()
-                    ToggleQuestionsDisplay()
-                } else {
-                    $('.question.selected').slideDown() }
+
+            if ( !document.hasFocus() ) {
+            // Is the user away? Alert them!
+                pingSound.play()
+                document.title = "(new) chrypt" }
+
+            // If there's a matching deciphered-text interpreter, use that.
+            if ( deciphered_text_interpreters[dmsg.substring(0,4)] ) {
+                deciphered_text_interpreters[dmsg.substring(0,4)](dmsg.substring(4))
             } else {
-                // If it's blank, it's probably an encryption error!
-                if (dmsg === '') {
-                    dmsg = "<i>The decrypted message is empty, most likely because your answers are not the same.</i>"
+                // Is it a blank message? Probably a mismatch between answers.
+                if ( dmsg === "" ) {
+                    messages_missed++
+                    if (messages_missed === 1) {
+                        dmsg = "_The decrypted message is empty, most likely because your answers are not the same._"
+                    } else if (messages_missed === 3) {
+                        dmsg = "_You can send a plaintext message by starting it with /plt. If you're having trouble coordinating answers, try telling them to delete all questions and start over, whilst you do the same._"
+                    } else {
+                        "_Another empty decrypted message._"
+                    }
                 }
-                // If it's a regular chat, format it a la gmail
+                // Format it a la gmail
                 dmsg = dmsg.replace(/(^| )\*(.+?)\*( |$)/g,"$1<strong>\$2</strong>$3")
                 dmsg = dmsg.replace(/(^| )\_(.+?)\_( |$)/g,"$1<em>\$2</em>$3")
                 dmsg = dmsg.replace(/(^| )\-(.+?)\-( |$)/g,"$1<del>\$2</del>$3")
-                if (who === wholast) {
-                   $("#detxt p:last").append("<br/> "+dmsg)
+
+                // Only sign the message if it's necessary.
+                if ($("#detxt p:last").hasClass(who)) {
+                   $("#detxt p:last").append("<br> "+dmsg)
                 } else {
-                    wholast = who
                     $("<p class='"+who+"'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
                 }
             }
-
-        // Scroll the textbox to the bottom
+        // After everything's written, scroll the textbox to the bottom
         detext.scrollTop = detext.scrollHeight;
         }
     }
 
+    /*
+     * Crypto helper functions *
+                               */
     var getSecret = function() {
-        var secret = ""
-        $(".answer").each(function(i, element) {
-            secret = secret + element.value })
-        return secret }
+            var secret = ""
+            $(".answer").each(function(i, element) {
+                secret = secret + element.value })
+            return secret
+        },
 
-    var encrypt = function(plaintext) {
-        var hash = CryptoJS.SHA3(getSecret())
-        var encrypted = CryptoJS.AES.encrypt(plaintext, hash.toString())
-        return encrypted.toString() }
+        encrypt = function(plaintext) {
+            var hash = CryptoJS.SHA3(getSecret()).toString()
+            return CryptoJS.AES.encrypt(plaintext, hash).toString()
+        },
+        
+        decrypt = function(ciphertext) {
+            var hash = CryptoJS.SHA3(getSecret()).toString()
+            return CryptoJS.AES.decrypt(ciphertext, hash).toString(CryptoJS.enc.Utf8).toString()
+        }
 
-    var decrypt = function(ciphertext) {
-        var hash = CryptoJS.SHA3(getSecret())
-        var decrypted = CryptoJS.AES.decrypt(ciphertext, hash.toString()).toString(CryptoJS.enc.Utf8)
-        return decrypted.toString() }
+    /*
+     * Runtime *
+               */
+    var subd = window.location.hash.slice(1)
+    // Are we at a hashed subdomain? If not, make one up!
+    subd = subd ? subd : Math.random().toString(36).slice(2).substring(7,13)
+    $('#chan').val(subd)
+    window.location.hash = subd
 
-    addChat("me", "/sys Welcome to socially encrypted chat! <br><br> By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). <br><br> The answers to all questions are concatenated, hashed, and used as an encryption key, so if you and the other person have different answers you'll be unable to communicate. You can see what you're actually receiving and sending in the 'ENCRYPTED' tab.")
+    addChat("me", "/sys Welcome to socially encrypted chat! <br><br> By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). <br><br> The answers to all questions are concatenated, hashed, and used as an encryption key, so if your answers are differnt you'll be unable to communicate. <br><br> You can see what you're actually receiving and sending in the 'ENCRYPTED' tab.")
+
+    addChat("me", "/sys Connecting to: "+host+"/socket/"+$('#chan').val())
+    
+    $(document).ready(connectWS)
 
 </script>
 </html>
