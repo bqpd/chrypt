@@ -251,6 +251,7 @@ table { width: 100%;
         if (window["WebSocket"]) {
             var host = location.origin.replace(/^http/, 'ws')
             conn = new WebSocket(host+"/socket/"+$('#chan').val())
+            window.location.hash = $('#chan').val()
             console.log("Connecting to: "+host+"/socket/"+$('#chan').val())
             conn.onclose = function (evt) {
                 addChat("me", "/sys The connection has closed.")
