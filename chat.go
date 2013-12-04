@@ -288,6 +288,10 @@ table { width: 100%;
                 } else {
                     $('.question.selected').slideDown() }
             } else {
+                // If it's blank, it's probably an encryption error!
+                if (dmsg === '') {
+                    dmsg = "<i>The decrypted message is empty, probably because your questions and answers are not the same.</i>"
+                }
                 // If it's a regular chat, format it a la gmail
                 dmsg = dmsg.replace(/(^| )\*(.+?)\*( |$)/g,"$1<strong>\$2</strong>$3")
                 dmsg = dmsg.replace(/(^| )\_(.+?)\_( |$)/g,"$1<em>\$2</em>$3")
