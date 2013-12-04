@@ -207,12 +207,12 @@ table { width: 100%;
 
 /* TODO *\
 on running connectWS, set exponentially growing timeout, with a 'retry' link popping up somewhere
+send keep-alive messages every 30s or so?
 \*      */
 
     /*
      * Event-driven functions *
                               */
-
     var SwitchViews = function() {
             $(".tab").toggleClass("inactive")
             $(".inbox").toggleClass("invisible")
