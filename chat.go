@@ -1,4 +1,5 @@
-/*                                     
+/*  
+
         GGGGGGGGGGGGG                 
      GGG::::::::::::G                 
    GG:::::::::::::::G                 
@@ -15,6 +16,7 @@ G:::::G        G::::Go::::o     o::::o
    GG:::::::::::::::Go:::::::::::::::o
      GGG::::::GGG:::G oo:::::::::::oo 
         GGGGGG   GGGG   ooooooooooo   
+
 */
 
 package main
@@ -104,23 +106,21 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 <meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
 <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/normalize.css">
 <style>
-/*                                                        
-        CCCCCCCCCCCCC   SSSSSSSSSSSSSSS    SSSSSSSSSSSSSSS 
-     CCC::::::::::::C SS:::::::::::::::S SS:::::::::::::::S
-   CC:::::::::::::::CS:::::SSSSSS::::::SS:::::SSSSSS::::::S
-  C:::::CCCCCCCC::::CS:::::S     SSSSSSSS:::::S     SSSSSSS
- C:::::C       CCCCCCS:::::S            S:::::S            
-C:::::C              S:::::S            S:::::S            
-C:::::C               S::::SSSS          S::::SSSS         
-C:::::C                SS::::::SSSSS      SS::::::SSSSS    
-C:::::C                  SSS::::::::SS      SSS::::::::SS  
-C:::::C                     SSSSSS::::S        SSSSSS::::S 
-C:::::C                          S:::::S            S:::::S
- C:::::C       CCCCCC            S:::::S            S:::::S
-  C:::::CCCCCCCC::::CSSSSSSS     S:::::SSSSSSSS     S:::::S
-   CC:::::::::::::::CS::::::SSSSSS:::::SS::::::SSSSSS:::::S
-     CCC::::::::::::CS:::::::::::::::SS S:::::::::::::::SS 
-        CCCCCCCCCCCCC SSSSSSSSSSSSSSS    SSSSSSSSSSSSSSS   
+/*
+
+        cccccccccccccccc    ssssssssss       ssssssssss   
+      cc:::::::::::::::c  ss::::::::::s    ss::::::::::s  
+     c:::::::::::::::::css:::::::::::::s ss:::::::::::::s 
+    c:::::::cccccc:::::cs::::::ssss:::::ss::::::ssss:::::s
+    c::::::c     ccccccc s:::::s  ssssss  s:::::s  ssssss 
+    c:::::c                s::::::s         s::::::s      
+    c:::::c                   s::::::s         s::::::s   
+    c::::::c     cccccccssssss   s:::::s ssssss   s:::::s 
+    c:::::::cccccc:::::cs:::::ssss::::::ss:::::ssss::::::s
+     c:::::::::::::::::cs::::::::::::::s s::::::::::::::s 
+      cc:::::::::::::::c s:::::::::::ss   s:::::::::::ss  
+        cccccccccccccccc  sssssssssss      sssssssssss     
+
 */
 
 body {  color: #222;
@@ -131,6 +131,7 @@ body {  color: #222;
         width: 20em; }
 table { width: 100%; 
         text-align: center; }
+a { color: #0065cc; }
 
 #header {   text-align: center;
             background-color: rgb(64,64,64);
@@ -194,9 +195,9 @@ table { width: 100%;
             text-indent: -1em; }
 .inbox p { margin: 0.25em; }
 .emote { color: #777; font-style: italic; }
-.timer { color: #aaa; }
+.notice { color: #aaa; }
 
-#textentry { padding: 0.35em;  background-color: white; }
+#textentry { padding: 0.35em;  background-color: white; text-align: center; color: #aaa; }
 #textentry textarea {   border: 1px solid;
                         width: 100%;
                         border-color: #777 #aaa #aaa #aaa;}
@@ -218,6 +219,7 @@ table { width: 100%;
 </head>
 <body>
 <!-- 
+
     hhhhhhh                     tttt                                  lllllll 
     h:::::h                  ttt:::t                                  l:::::l 
     h:::::h                  t:::::t                                  l:::::l 
@@ -234,6 +236,7 @@ table { width: 100%;
      h:::::h     h:::::h     tt::::::::::::::tm::::m   m::::m   m::::ml::::::l
      h:::::h     h:::::h       tt:::::::::::ttm::::m   m::::m   m::::ml::::::l
      hhhhhhh     hhhhhhh         ttttttttttt  mmmmmm   mmmmmm   mmmmmmllllllll
+
 -->
     <div id="chatwindow">
 
@@ -251,7 +254,10 @@ table { width: 100%;
         <div id="detxt" class="inbox"></div>
         <div id="pltxt" class="inbox invisible"></div>
 
-        <div id="textentry"><textarea id="outbox" rows="4"></textarea></div>
+        <div id="textentry">
+            <span id="hashingalert" style="display: none;">Hashing new encryption key...</span>
+            <textarea id="outbox" rows="4"></textarea>
+        </div>
 
         <table id="tabs">
             <td onclick="SwitchViews()" class="tab"> DECRYPTED
@@ -265,30 +271,32 @@ table { width: 100%;
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
 <script>
-/*                                                        
-             jjjj                                                         
-            j::::j                                                        
-             jjjj                                                         
-                                                                          
-           jjjjjjj  aaaaaaaaaaaaavvvvvvv           vvvvvvvaaaaaaaaaaaaa   
-           j:::::j  a::::::::::::av:::::v         v:::::v a::::::::::::a  
-            j::::j  aaaaaaaaa:::::av:::::v       v:::::v  aaaaaaaaa:::::a 
-            j::::j           a::::a v:::::v     v:::::v            a::::a 
-            j::::j    aaaaaaa:::::a  v:::::v   v:::::v      aaaaaaa:::::a 
-            j::::j  aa::::::::::::a   v:::::v v:::::v     aa::::::::::::a 
-            j::::j a::::aaaa::::::a    v:::::v:::::v     a::::aaaa::::::a 
-            j::::ja::::a    a:::::a     v:::::::::v     a::::a    a:::::a 
-            j::::ja::::a    a:::::a      v:::::::v      a::::a    a:::::a 
-            j::::ja:::::aaaa::::::a       v:::::v       a:::::aaaa::::::a 
-            j::::j a::::::::::aa:::a       v:::v         a::::::::::aa:::a
-            j::::j  aaaaaaaaaa  aaaa        vvv           aaaaaaaaaa  aaaa
-            j::::j                                                        
-  jjjj      j::::j                                                        
- j::::jj   j:::::j                                                        
- j::::::jjj::::::j                                                        
-  jj::::::::::::j                                                         
-    jjj::::::jjj                                                          
+/*
+
+             jjjj                  
+            j::::j                 
+             jjjj                  
+                                   
+           jjjjjjj    ssssssssss   
+           j:::::j  ss::::::::::s  
+            j::::jss:::::::::::::s 
+            j::::js::::::ssss:::::s
+            j::::j s:::::s  ssssss 
+            j::::j   s::::::s      
+            j::::j      s::::::s   
+            j::::jssssss   s:::::s 
+            j::::js:::::ssss::::::s
+            j::::js::::::::::::::s 
+            j::::j s:::::::::::ss  
+            j::::j  sssssssssss    
+            j::::j                 
+  jjjj      j::::j                 
+ j::::jj   j:::::j                 
+ j::::::jjj::::::j                 
+  jj::::::::::::j                  
+    jjj::::::jjj                   
        jjjjjj
+
 */
 
 /* TODO *\
@@ -412,6 +420,10 @@ prevent identical clients from connecting to each other
                 $("<p class='emote'>"+cmsg+"</p>").appendTo("#detxt")  }
         },
 
+        "/ntc ": function(who, cmsg) {
+            $("<p class='notice'>"+cmsg+"</p>").appendTo("#detxt")
+        },
+
         "/plt ": function(who, cmsg) {
             $("<p class='"+who+"'style='color: red'><b>"+who+":  (not encrypted) <br></b>"+cmsg+"</p>").appendTo("#detxt")
             detext.scrollTop = detext.scrollHeight;
@@ -468,21 +480,22 @@ prevent identical clients from connecting to each other
                     if (messages_missed === 1) {
                         dmsg = "_The decrypted message is empty, most likely because your answers are not the same._"
                     } else if (messages_missed === 3) {
-                        dmsg = "_You can send a plaintext message by starting it with '/plt'. If you're having trouble coordinating answers, try deleting all questions and starting over. Giving them hints is not only abad security, it's less fun!_"
+                        dmsg = "_You can send a plaintext message by starting it with '/plt'. If you're having trouble coordinating answers, try deleting all questions and starting over. Giving them hints is not only bad security, it's less fun!_"
                     } else {
                         dmsg = "<br> _Another empty decrypted message._ <br>"
                     }
                 }
                 // Format it a la gmail
+                dmsg = dmsg.replace(/(^| )(http.+?)( |$)/g,"$1<a href='$2'>$2</a>$3")
                 dmsg = dmsg.replace(/(^| )\*(.+?)\*( |$)/g,"$1<strong>\$2</strong>$3")
                 dmsg = dmsg.replace(/(^| )\_(.+?)\_( |$)/g,"$1<em>\$2</em>$3")
                 dmsg = dmsg.replace(/(^| )\-(.+?)\-( |$)/g,"$1<del>\$2</del>$3")
 
-                // Only sign the message if it's necessary.
-                if ($("#detxt p:last").hasClass(who)) {
+                // Don't sign the message if the previous one was 'normal' and from the same person
+                if ($("#detxt p:last").hasClass(who) && $("#detxt p:last").hasClass('normal')) {
                    $("#detxt p:last").append("<br> "+dmsg)
                 } else {
-                    $("<p class='"+who+"'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
+                    $("<p class='"+who+" normal'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
                 }
             }
         // After everything's written, scroll the textbox to the bottom
@@ -493,21 +506,36 @@ prevent identical clients from connecting to each other
     /*
      * Crypto helper functions *
                                */
-    var getSecret = function() {
+    var last_singlehash,
+        last_thousandhash,
+
+    updateHashes = function() {
+        if (last_singlehash !== getSecret(1)) {
+            addChat('me', '/ntc Encryption key was changed')
+            last_singlehash = getSecret(1)
+            last_thousandhash = getSecret(1000)
+        }
+    },
+
+    getSecret = function(hashes) {
             var secret = ""
             $(".answer").each(function(i, element) {
                 secret = secret + element.value })
-            return secret
+
+            var hash = CryptoJS.SHA3(secret).toString()
+            for (var i = hashes; i > 0; i--) {
+                hash =  CryptoJS.SHA3(hash).toString() }
+            return hash
         },
 
         encrypt = function(plaintext) {
-            var hash = CryptoJS.SHA3(getSecret()).toString()
-            return CryptoJS.AES.encrypt(plaintext, hash).toString()
+            updateHashes()
+            return CryptoJS.AES.encrypt(plaintext, last_thousandhash).toString()
         },
         
         decrypt = function(ciphertext) {
-            var hash = CryptoJS.SHA3(getSecret()).toString()
-            return CryptoJS.AES.decrypt(ciphertext, hash).toString(CryptoJS.enc.Utf8).toString()
+            updateHashes()
+            return CryptoJS.AES.decrypt(ciphertext, last_thousandhash).toString(CryptoJS.enc.Utf8).toString()
         }
 
     /*
@@ -515,6 +543,9 @@ prevent identical clients from connecting to each other
                */
 
     addChat("me", "/sys Welcome to socially encrypted chat! <br><br> By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). <br><br> The answers to all questions are concatenated, hashed, and used as an encryption key, so if your answers are different you'll be unable to communicate. <br><br> You can see exactly what you're sending and receiving in the 'ENCRYPTED' tab.")
+
+    last_singlehash = getSecret(1)
+    last_thousandhash = getSecret(1000)
 
     addChat("me", "/sys Connecting to: "+host+"/socket/"+$('#chan').text())
     
