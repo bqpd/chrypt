@@ -1,3 +1,22 @@
+/*                                     
+        GGGGGGGGGGGGG                 
+     GGG::::::::::::G                 
+   GG:::::::::::::::G                 
+  G:::::GGGGGGGG::::G                 
+ G:::::G       GGGGGG   ooooooooooo   
+G:::::G               oo:::::::::::oo 
+G:::::G              o:::::::::::::::o
+G:::::G    GGGGGGGGGGo:::::ooooo:::::o
+G:::::G    G::::::::Go::::o     o::::o
+G:::::G    GGGGG::::Go::::o     o::::o
+G:::::G        G::::Go::::o     o::::o
+ G:::::G       G::::Go::::o     o::::o
+  G:::::GGGGGGGG::::Go:::::ooooo:::::o
+   GG:::::::::::::::Go:::::::::::::::o
+     GGG::::::GGG:::G oo:::::::::::oo 
+        GGGGGG   GGGG   ooooooooooo   
+*/
+
 package main
 
 import (
@@ -21,6 +40,7 @@ func main() {
 type socket struct {
     io.ReadWriter
     done chan bool
+    loc string
 }
 
 func (s socket) Close() error {
@@ -28,18 +48,25 @@ func (s socket) Close() error {
     return nil
 }
 
+var socketmap = make( map[string]chan socket )
+
 func socketHandler(ws *websocket.Conn) {
-    fmt.Println("[ws] Starting websocket handler...")
-    s := socket{ws, make(chan bool)}
-    go match(s)
+    loc := ws.Config().Location.String()
+    s := socket{ws, make(chan bool), loc}
+    
+    if _, ok := socketmap[loc]; ok {
+        go match(s, socketmap[loc])
+    } else {
+        socketmap[loc] = make(chan socket)
+        go match(s, socketmap[loc])
+    }
+
     <-s.done
-    fmt.Println("[ws] ...closing websocket handler.")
+    fmt.Println("[ws] closing websocket handler at "+loc)
 }
 
-var partner = make(chan io.ReadWriteCloser)
-
-func match(c io.ReadWriteCloser) {
-    fmt.Println("[m] Looking for a match...")
+func match(c socket, partner chan socket) {
+    fmt.Println("[m] Looking for a match at "+c.loc)
     fmt.Fprint(c, "/sys Waiting for a partner...")
     select {
     case partner <- c:
@@ -49,8 +76,8 @@ func match(c io.ReadWriteCloser) {
     }
 }
 
-func chat(a, b io.ReadWriteCloser) {
-    fmt.Println("[m] ...found a match!")
+func chat(a, b socket) {
+    fmt.Println("[m] Found a match between locations "+a.loc+" and "+b.loc)
     fmt.Fprint(a, "/sys ...we found one!")
     fmt.Fprint(b, "/sys ...we found one!")
     errc := make(chan error, 1)
@@ -69,6 +96,7 @@ func cp(w io.Writer, r io.Reader, errc chan<- error) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
+    fmt.Println(r.URL)
     fmt.Println("[http] Starting web handler...")
     fmt.Fprint(w, `
 <html>
@@ -76,6 +104,24 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 <meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
 <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/normalize.css">
 <style>
+/*                                                        
+        CCCCCCCCCCCCC   SSSSSSSSSSSSSSS    SSSSSSSSSSSSSSS 
+     CCC::::::::::::C SS:::::::::::::::S SS:::::::::::::::S
+   CC:::::::::::::::CS:::::SSSSSS::::::SS:::::SSSSSS::::::S
+  C:::::CCCCCCCC::::CS:::::S     SSSSSSSS:::::S     SSSSSSS
+ C:::::C       CCCCCCS:::::S            S:::::S            
+C:::::C              S:::::S            S:::::S            
+C:::::C               S::::SSSS          S::::SSSS         
+C:::::C                SS::::::SSSSS      SS::::::SSSSS    
+C:::::C                  SSS::::::::SS      SSS::::::::SS  
+C:::::C                     SSSSSS::::S        SSSSSS::::S 
+C:::::C                          S:::::S            S:::::S
+ C:::::C       CCCCCC            S:::::S            S:::::S
+  C:::::CCCCCCCC::::CSSSSSSS     S:::::SSSSSSSS     S:::::S
+   CC:::::::::::::::CS::::::SSSSSS:::::SS::::::SSSSSS:::::S
+     CCC::::::::::::CS:::::::::::::::SS S:::::::::::::::SS 
+        CCCCCCCCCCCCC SSSSSSSSSSSSSSS    SSSSSSSSSSSSSSS   
+*/
 
 body {  color: #222;
         font-family: Arial, arial;
@@ -84,7 +130,7 @@ body {  color: #222;
 #chatwindow {   margin: 0 auto;
         width: 20em; }
 table { width: 100%; 
-        text-align: center;}
+        text-align: center; }
 
 #header {   text-align: center;
             background-color: rgb(64,64,64);
@@ -100,9 +146,7 @@ table { width: 100%;
     background: none;
     width: 80%;
     color: white;
-    font-weight: 700;
-    cursor: pointer;
-}
+    font-weight: 700; }
 
 #questionbox { 
     background-color: #76DAFF;
@@ -116,8 +160,7 @@ table { width: 100%;
     font-size: 0.75 em;
     color: rgb(64,64,64);
     cursor: pointer;
-    margin-top: -1em;
-}
+    margin-top: -1em; }
 .question { background-color: #aaa;
             padding: 0.5em 0.35em; 
             font-size: 1.5em; }
@@ -174,11 +217,29 @@ table { width: 100%;
 <title> chrypt </title>
 </head>
 <body>
+<!-- 
+    hhhhhhh                     tttt                                  lllllll 
+    h:::::h                  ttt:::t                                  l:::::l 
+    h:::::h                  t:::::t                                  l:::::l 
+    h:::::h                  t:::::t                                  l:::::l 
+     h::::h hhhhh      ttttttt:::::ttttttt       mmmmmmm    mmmmmmm    l::::l 
+     h::::hh:::::hhh   t:::::::::::::::::t     mm:::::::m  m:::::::mm  l::::l 
+     h::::::::::::::hh t:::::::::::::::::t    m::::::::::mm::::::::::m l::::l 
+     h:::::::hhh::::::htttttt:::::::tttttt    m::::::::::::::::::::::m l::::l 
+     h::::::h   h::::::h     t:::::t          m:::::mmm::::::mmm:::::m l::::l 
+     h:::::h     h:::::h     t:::::t          m::::m   m::::m   m::::m l::::l 
+     h:::::h     h:::::h     t:::::t          m::::m   m::::m   m::::m l::::l 
+     h:::::h     h:::::h     t:::::t    ttttttm::::m   m::::m   m::::m l::::l 
+     h:::::h     h:::::h     t::::::tttt:::::tm::::m   m::::m   m::::ml::::::l
+     h:::::h     h:::::h     tt::::::::::::::tm::::m   m::::m   m::::ml::::::l
+     h:::::h     h:::::h       tt:::::::::::ttm::::m   m::::m   m::::ml::::::l
+     hhhhhhh     hhhhhhh         ttttttttttt  mmmmmm   mmmmmm   mmmmmmllllllll
+-->
     <div id="chatwindow">
 
         <table id="header">
             <td id="status"> ●
-            <td id="channel"> <input id="chan" onkeyup="connectWS()" spellcheck="false" />
+            <td id="channel"> <span id="chan" />
             <td id="key" onclick="ToggleQuestionsDisplay()">
                 <img src="https://dl.dropboxusercontent.com/u/4646709/key3.svg" height=20 />
         </table>
@@ -204,6 +265,31 @@ table { width: 100%;
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
 <script>
+/*                                                        
+             jjjj                                                         
+            j::::j                                                        
+             jjjj                                                         
+                                                                          
+           jjjjjjj  aaaaaaaaaaaaavvvvvvv           vvvvvvvaaaaaaaaaaaaa   
+           j:::::j  a::::::::::::av:::::v         v:::::v a::::::::::::a  
+            j::::j  aaaaaaaaa:::::av:::::v       v:::::v  aaaaaaaaa:::::a 
+            j::::j           a::::a v:::::v     v:::::v            a::::a 
+            j::::j    aaaaaaa:::::a  v:::::v   v:::::v      aaaaaaa:::::a 
+            j::::j  aa::::::::::::a   v:::::v v:::::v     aa::::::::::::a 
+            j::::j a::::aaaa::::::a    v:::::v:::::v     a::::aaaa::::::a 
+            j::::ja::::a    a:::::a     v:::::::::v     a::::a    a:::::a 
+            j::::ja::::a    a:::::a      v:::::::v      a::::a    a:::::a 
+            j::::ja:::::aaaa::::::a       v:::::v       a:::::aaaa::::::a 
+            j::::j a::::::::::aa:::a       v:::v         a::::::::::aa:::a
+            j::::j  aaaaaaaaaa  aaaa        vvv           aaaaaaaaaa  aaaa
+            j::::j                                                        
+  jjjj      j::::j                                                        
+ j::::jj   j:::::j                                                        
+ j::::::jjj::::::j                                                        
+  jj::::::::::::j                                                         
+    jjj::::::jjj                                                          
+       jjjjjj
+*/
 
 /* TODO *\
 on running connectWS, set exponentially growing timeout, with a 'retry' link popping up somewhere
@@ -246,8 +332,14 @@ prevent identical clients from connecting to each other
         if (e.which === 13 && !e.shiftKey) {
             msg = outbox.val()
                 if (msg) {
-                    addChat("me", encrypt(msg))
-                    conn.send(encrypt(msg))
+                    if (msg.substr(0,5) === "/plt ") {
+                        addChat("me", msg)
+                        conn.send(msg)
+                    } else {
+                        addChat("me", encrypt(msg))
+                        conn.send(encrypt(msg))
+
+                    }
                     outbox.val("")
                 }
             return false
@@ -265,20 +357,44 @@ prevent identical clients from connecting to each other
     /*
      * Websocket interfacing *
                              */
-    var host = location.origin.replace(/^http/, "ws"),
-        conn, 
+    var subd = location.href.replace(/^.*\//, "")
+    // Are we at a hashed subdomain? If not, make one up!
+    if ( subd === '') {
+        subd = Math.random().toString(36).slice(2).substring(7,13)
+        location.href = location.origin+'/'+subd
+    }
+    $('#chan').text(subd)
+
+    var last_connection_time = 0,
+        connecting = false,
+        host = location.origin.replace(/^http/, "ws"),
+        conn,
 
     connectWS = function() {
         if (window["WebSocket"]) {
-            conn = new WebSocket(host+"/socket/"+$("#chan").val())
-            window.location.hash = $("#chan").val()
+            conn = new WebSocket(host+"/socket/"+subd)
             conn.onclose = function (evt) {
                 addChat("me", "/sys The connection has closed.")
-                connectWS() }
+                delayedConnect() }
             conn.onmessage = function (evt) {
                 addChat("them", evt.data) }
         } else {
-            addChat("me", "/sys Sadly, your browser does not support WebSockets.") } }
+            addChat("me", "/sys Sadly, your browser does not support WebSockets.")
+        }
+        connecting = false
+    },
+
+    delayedConnect = function() {
+        if ( !connecting ) {
+            var time = new Date().getTime()
+            if ( time > last_connection_time ) {
+                var delay = Math.max(last_connection_time+5000, time) - time
+                last_connection_time = time + delay
+                connecting = true
+                setTimeout( connectWS, delay )
+            }
+        }
+    }
 
     /*
      * Message parsing and display *
@@ -288,7 +404,7 @@ prevent identical clients from connecting to each other
                      "The connection has closed." : "red" },
 
     ciphertext_interpreters = {
-        "/sys ": function(cmsg) {
+        "/sys ": function(who, cmsg) {
             if ( statuses[cmsg] ) {
                 $("#status").css({"color": statuses[cmsg]}) }
             else {
@@ -296,16 +412,21 @@ prevent identical clients from connecting to each other
                 $("<p class='emote'>"+cmsg+"</p>").appendTo("#detxt")  }
         },
 
-        "/plt ": function(cmsg) {
-            $("<p class='"+who+"'><b>"+who+": </b>"+dmsg+"</p>").appendTo("#detxt")
+        "/plt ": function(who, cmsg) {
+            $("<p class='"+who+"'style='color: red'><b>"+who+":  (not encrypted) <br></b>"+cmsg+"</p>").appendTo("#detxt")
+            detext.scrollTop = detext.scrollHeight;
+            if ( !document.hasFocus() ) {
+                // Is the user away? Alert them!
+                pingSound.play()
+                document.title = "(new) chrypt" }
         } }, 
     
     deciphered_text_interpreters = {
-        "/me " : function(dmsg) {
+        "/me " : function(who, dmsg) {
             $("<p class='emote'>"+dmsg+"</p>").appendTo("#detxt")
         },
 
-        "/nq " : function(dmsg) {
+        "/nq " : function(who, dmsg) {
             $("<div class='question selected' style='display:none'><table><tr><td class='qtxt qbubble'>"+dmsg+"<td class='closeq'>&times;<tr><td style='height: 0.35em'><tr><td><input class='answer qbubble'/><td class='submitq'>✓</table></div>").appendTo("#questionbox")
             // Show the questions box
             if (!$("#key").hasClass("selected")) {
@@ -326,7 +447,7 @@ prevent identical clients from connecting to each other
 
         // If there's a matching ciphertext interpreter, run it and skip the rest.
         if ( ciphertext_interpreters[cmsg.substring(0,5)] ) {
-            ciphertext_interpreters[cmsg.substring(0,5)](cmsg.substring(5))
+            ciphertext_interpreters[cmsg.substring(0,5)](who, cmsg.substring(5))
         } else {
             // Decrypt and translate newlines.
             dmsg = decrypt(cmsg)
@@ -339,7 +460,7 @@ prevent identical clients from connecting to each other
 
             // If there's a matching deciphered-text interpreter, use that.
             if ( deciphered_text_interpreters[dmsg.substring(0,4)] ) {
-                deciphered_text_interpreters[dmsg.substring(0,4)](dmsg.substring(4))
+                deciphered_text_interpreters[dmsg.substring(0,4)](who, dmsg.substring(4))
             } else {
                 // Is it a blank message? Probably a mismatch between answers.
                 if ( dmsg === "" ) {
@@ -347,9 +468,9 @@ prevent identical clients from connecting to each other
                     if (messages_missed === 1) {
                         dmsg = "_The decrypted message is empty, most likely because your answers are not the same._"
                     } else if (messages_missed === 3) {
-                        dmsg = "_You can send a plaintext message by starting it with /plt. If you're having trouble coordinating answers, try telling them to delete all questions and start over, whilst you do the same._"
+                        dmsg = "_You can send a plaintext message by starting it with '/plt'. If you're having trouble coordinating answers, try deleting all questions and starting over. Giving them hints is not only abad security, it's less fun!_"
                     } else {
-                        "_Another empty decrypted message._"
+                        dmsg = "<br> _Another empty decrypted message._ <br>"
                     }
                 }
                 // Format it a la gmail
@@ -392,15 +513,10 @@ prevent identical clients from connecting to each other
     /*
      * Runtime *
                */
-    var subd = window.location.hash.slice(1)
-    // Are we at a hashed subdomain? If not, make one up!
-    subd = subd ? subd : Math.random().toString(36).slice(2).substring(7,13)
-    $('#chan').val(subd)
-    window.location.hash = subd
 
     addChat("me", "/sys Welcome to socially encrypted chat! <br><br> By starting a message with '/nq' you can ask the other person a question. (Try '/nq What is my nickname for you?'). <br><br> The answers to all questions are concatenated, hashed, and used as an encryption key, so if your answers are different you'll be unable to communicate. <br><br> You can see exactly what you're sending and receiving in the 'ENCRYPTED' tab.")
 
-    addChat("me", "/sys Connecting to: "+host+"/socket/"+$('#chan').val())
+    addChat("me", "/sys Connecting to: "+host+"/socket/"+$('#chan').text())
     
     $(document).ready(connectWS)
 
