@@ -151,10 +151,9 @@ a { color: #0065cc; }
 
 #questionbox { 
     background-color: #76DAFF;
-    text-align: right;
     padding-top: 1.5em;
     padding-bottom: 0.5em; }
-#showq {
+.qbutton {
     background-color: rgba(255, 255, 255, 0.5);
     padding: 0.5em;
     font-weight: 700;
@@ -248,15 +247,15 @@ a { color: #0065cc; }
         </table>
 
         <div id="questionbox" style="display:none">
-            <span onclick="showOldQs()" id="showq">show older questions</span><p/>
+            <span onclick="startNewQ()" class="qbutton" style="float: left">+ new question</span>
+            <span onclick="showOldQs()" id="showq" class="qbutton" style="float: right">show old questions</span>
+            <br>
         </div>
 
         <div id="detxt" class="inbox"></div>
         <div id="pltxt" class="inbox invisible"></div>
 
-        <div id="textentry">
-            <span id="hashingalert" style="display: none;">Hashing new encryption key...</span>
-            <textarea id="outbox" rows="4"></textarea>
+        <div id="textentry"><textarea id="outbox" rows="4"></textarea>
         </div>
 
         <table id="tabs">
@@ -319,20 +318,26 @@ prevent identical clients from connecting to each other
             if ( $("#questionbox").is(":hidden") ) {
                 $("#key").removeClass("selected")
                 $(".question:not(.selected)").hide()
-                $('#showq').text("show older questions")
+                $('#showq').text("show old questions")
             }
         } )
+    },
+
+    startNewQ = function() {
+        $("#outbox").val("/nq Type your question here.")
+        $("#outbox").focus()
+        $("#outbox")[0].setSelectionRange(4,28)
     },
 
     showOldQs = function() {
         switch ( $('#showq').text().substring(0,4) ) {
             case "show":
                 $( '.question:not(.selected)' ).slideDown()
-                $('#showq').text("hide older questions")
+                $('#showq').text("hide old questions")
                 break
             case "hide":
                 $( '.question:not(.selected)' ).slideUp()
-                $('#showq').text("show older questions") } }, 
+                $('#showq').text("show old questions") } }, 
 
     outbox = $("#outbox")
     outbox.focus( function() { document.title = "chrypt" } )
