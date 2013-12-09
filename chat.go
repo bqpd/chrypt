@@ -28,6 +28,7 @@ import (
     "log"
     "net/http"
     "code.google.com/p/go.net/websocket"
+    "sync"
 )
 
 func main() {
@@ -53,14 +54,18 @@ func (s socket) Close() error {
 
 var socketmap = make( map[string]chan socket )
 
+var checkingSocketMap = new(sync.Mutex)
+
 func socketHandler(ws *websocket.Conn) {
     addr := ws.Request().RemoteAddr
     loc := ws.Config().Location.String()
     s := socket{ws, make(chan bool), loc, addr}
     
+    checkingSocketMap.Lock()
     if _, exist := socketmap[loc]; !exist {
         socketmap[loc] = make(chan socket)
     }
+    checkingSocketMap.Unlock()
 
     go match(s)
 
@@ -88,8 +93,8 @@ func chat(a, b socket) {
     fmt.Fprint(a, "/sys ...we found one!")
     fmt.Fprint(b, "/sys ...we found one!")
 
-    fmt.Fprint(a, "/sys You are talking to "+b.addr)
-    fmt.Fprint(b, "/sys You are talking to "+a.addr)
+    //fmt.Fprint(a, "/sys You are talking to "+b.addr)
+    //fmt.Fprint(b, "/sys You are talking to "+a.addr)
 
     errc := make(chan error, 1)
     go cp(a, b, errc)
