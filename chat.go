@@ -58,28 +58,27 @@ func socketHandler(ws *websocket.Conn) {
     loc := ws.Config().Location.String()
     s := socket{ws, make(chan bool), loc, addr}
     
-    if _, ok := socketmap[loc]; ok {
-        go match(s, socketmap[loc])
-    } else {
+    if _, exist := socketmap[loc]; !exist {
         socketmap[loc] = make(chan socket)
-        go match(s, socketmap[loc])
     }
+
+    go match(s)
 
     <-s.done
     fmt.Println("[ws] closing connection to "+addr+" on channel "+loc)
 }
 
-func match(c socket, partner chan socket) {
+func match(c socket) {
     fmt.Println("[ws] "+c.addr+" added to channel "+c.loc)
     fmt.Fprint(c, "/sys Waiting for a partner...")
     select {
-    case partner <- c:
+    case socketmap[c.loc] <- c:
         // now handled by the other goroutine
-    case p := <-partner:
+    case p := <-socketmap[c.loc]:
         if p.addr != c.addr {
             chat(p, c)
         } else {
-            partner <- c
+            match(c)
         }
     }
 }
@@ -88,6 +87,10 @@ func chat(a, b socket) {
     fmt.Println("[ws] matched "+a.addr+" and "+b.addr+" on channel "+a.loc)
     fmt.Fprint(a, "/sys ...we found one!")
     fmt.Fprint(b, "/sys ...we found one!")
+
+    fmt.Fprint(a, "/sys You are talking to "+b.addr)
+    fmt.Fprint(b, "/sys You are talking to "+a.addr)
+
     errc := make(chan error, 1)
     go cp(a, b, errc)
     go cp(b, a, errc)
@@ -105,10 +108,11 @@ func cp(w io.Writer, r io.Reader, errc chan<- error) {
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Println("[http] serving "+r.URL.String())
-    fmt.Fprint(w, `
+    if r.URL.String() != "/favico.ico" {
+        fmt.Fprint(w, `
 <html>
-<head>
 <meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
+<head>
 <link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/normalize.css">
 <style>
 /*
@@ -564,4 +568,4 @@ prevent identical clients from connecting to each other
 
 </script>
 </html>
-`) }
+`) } }
