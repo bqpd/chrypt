@@ -94,8 +94,8 @@ func chat(a, b socket) {
     fmt.Fprint(a, "/sys ...we found one!")
     fmt.Fprint(b, "/sys ...we found one!")
 
-    fmt.Fprint(a, "/sys You are talking to "+b.id)
-    fmt.Fprint(b, "/sys You are talking to "+a.id)
+    //fmt.Fprint(a, "/sys You are talking to "+b.id)
+    //fmt.Fprint(b, "/sys You are talking to "+a.id)
 
     errc := make(chan error, 1)
     go cp(a, b, errc)
