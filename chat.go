@@ -43,6 +43,7 @@ type socket struct {
     io.ReadWriter
     done chan bool
     loc string
+    addr string
 }
 
 func (s socket) Close() error {
@@ -53,8 +54,9 @@ func (s socket) Close() error {
 var socketmap = make( map[string]chan socket )
 
 func socketHandler(ws *websocket.Conn) {
+    addr := ws.Request().RemoteAddr
     loc := ws.Config().Location.String()
-    s := socket{ws, make(chan bool), loc}
+    s := socket{ws, make(chan bool), loc, addr}
     
     if _, ok := socketmap[loc]; ok {
         go match(s, socketmap[loc])
@@ -64,22 +66,26 @@ func socketHandler(ws *websocket.Conn) {
     }
 
     <-s.done
-    fmt.Println("[ws] closing websocket handler at "+loc)
+    fmt.Println("[ws] closing connection to "+addr+" on channel "+loc)
 }
 
 func match(c socket, partner chan socket) {
-    fmt.Println("[m] Looking for a match at "+c.loc)
+    fmt.Println("[ws] "+c.addr+" added to channel "+c.loc)
     fmt.Fprint(c, "/sys Waiting for a partner...")
     select {
     case partner <- c:
         // now handled by the other goroutine
     case p := <-partner:
-        chat(p, c)
+        if p.addr != c.addr {
+            chat(p, c)
+        } else {
+            partner <- c
+        }
     }
 }
 
 func chat(a, b socket) {
-    fmt.Println("[m] Found a match between locations "+a.loc+" and "+b.loc)
+    fmt.Println("[ws] matched "+a.addr+" and "+b.addr+" on channel "+a.loc)
     fmt.Fprint(a, "/sys ...we found one!")
     fmt.Fprint(b, "/sys ...we found one!")
     errc := make(chan error, 1)
@@ -98,8 +104,7 @@ func cp(w io.Writer, r io.Reader, errc chan<- error) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Println(r.URL)
-    fmt.Println("[http] Starting web handler...")
+    fmt.Println("[http] serving "+r.URL.String())
     fmt.Fprint(w, `
 <html>
 <head>
@@ -128,7 +133,7 @@ body {  color: #222;
         background-color: #707070;
         font-size: 12.8px; }
 #chatwindow {   margin: 0 auto;
-        width: 20em; }
+        max-width: 20em; }
 table { width: 100%; 
         text-align: center; }
 a { color: #0065cc; }
@@ -188,6 +193,7 @@ a { color: #0065cc; }
 .inbox {    background-color: white;
             word-wrap: break-word;
             overflow-y: scroll;
+            min-height: 10em;
             height: 23em;
             padding: 0.5em;
             padding-left: 1.5em;
@@ -552,7 +558,7 @@ prevent identical clients from connecting to each other
     last_singlehash = getSecret(1)
     last_thousandhash = getSecret(1000)
 
-    addChat("me", "/sys Connecting to: "+host+"/socket/"+$('#chan').text())
+    addChat("me", "/sys Connecting to: "+host+"/socket/"+subd)
     
     $(document).ready(connectWS)
 

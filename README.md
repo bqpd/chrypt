@@ -7,3 +7,5 @@
 - Question management system
   - Resend all questions
   - Decrypt in order
+- Server
+  - Don't connect to a duplicate!
