@@ -44,7 +44,7 @@ type socket struct {
     io.ReadWriter
     done chan bool
     loc string
-    addr string
+    id string
 }
 
 func (s socket) Close() error {
@@ -57,9 +57,10 @@ var socketmap = make( map[string]chan socket )
 var checkingSocketMap = new(sync.Mutex)
 
 func socketHandler(ws *websocket.Conn) {
-    addr := ws.Request().RemoteAddr
     loc := ws.Config().Location.String()
-    s := socket{ws, make(chan bool), loc, addr}
+    var id string
+    websocket.Message.Receive(ws, &id)
+    s := socket{ws, make(chan bool), loc, id}
     
     checkingSocketMap.Lock()
     if _, exist := socketmap[loc]; !exist {
@@ -70,17 +71,17 @@ func socketHandler(ws *websocket.Conn) {
     go match(s)
 
     <-s.done
-    fmt.Println("[ws] closing connection to "+addr+" on channel "+loc)
+    fmt.Println("[ws] closing connection to "+id+" on channel "+loc)
 }
 
 func match(c socket) {
-    fmt.Println("[ws] "+c.addr+" added to channel "+c.loc)
+    fmt.Println("[ws] "+c.id+" added to channel "+c.loc)
     fmt.Fprint(c, "/sys Waiting for a partner...")
     select {
     case socketmap[c.loc] <- c:
         // now handled by the other goroutine
     case p := <-socketmap[c.loc]:
-        if p.addr != c.addr {
+        if p.id != c.id {
             chat(p, c)
         } else {
             match(c)
@@ -89,12 +90,12 @@ func match(c socket) {
 }
 
 func chat(a, b socket) {
-    fmt.Println("[ws] matched "+a.addr+" and "+b.addr+" on channel "+a.loc)
+    fmt.Println("[ws] matched "+a.id+" and "+b.id+" on channel "+a.loc)
     fmt.Fprint(a, "/sys ...we found one!")
     fmt.Fprint(b, "/sys ...we found one!")
 
-    //fmt.Fprint(a, "/sys You are talking to "+b.addr)
-    //fmt.Fprint(b, "/sys You are talking to "+a.addr)
+    //fmt.Fprint(a, "/sys You are talking to "+b.id)
+    //fmt.Fprint(b, "/sys You are talking to "+a.id)
 
     errc := make(chan error, 1)
     go cp(a, b, errc)
@@ -397,10 +398,12 @@ prevent identical clients from connecting to each other
         connecting = false,
         host = location.origin.replace(/^http/, "ws"),
         conn,
+        client_id = Math.random().toString(36).slice(2).substring(0,13),
 
     connectWS = function() {
         if (window["WebSocket"]) {
             conn = new WebSocket(host+"/socket/"+subd)
+            setTimeout('conn.send(client_id)', 1000)
             conn.onclose = function (evt) {
                 addChat("me", "/sys The connection has closed.")
                 delayedConnect() }
