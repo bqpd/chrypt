@@ -1,0 +1,56 @@
+<html>
+<!--
+
+chrypt is based upon Social Crypto by Aaakanksha Sarda
+(http://aaki.scripts.mit.edu/social_crypto) and is dedicated to her.
+
+development was inspired by Edward Snowden's revelations over the summer of 2013.
+
+The hard part is not imagining Utopia,
+but taking the next uncertain step
+with open eyes.
+
+-->
+<meta http-equiv="Content-Type" content="text/html; Charset=UTF-8"  />
+<head>
+<link rel="stylesheet" href="https://dl.dropboxusercontent.com/u/4646709/normalize.css">
+<link rel="stylesheet" href="chrypt.css">
+<title> chrypt </title>
+</head>
+
+<body>
+    <div id="chatwindow">
+
+        <table id="header">
+            <td id="status"> ●
+            <td id="channel"> <span id="chan" />
+            <td id="key" onclick="ToggleQuestionsDisplay()">
+                <img src="key.svg" height=20 />
+        </table>
+
+        <div id="questionbox" style="display:none">
+            <span onclick="startNewQ()" class="qbutton" style="float: left">+ new question</span>
+            <span onclick="showOldQs()" id="showq" class="qbutton" style="float: right">show old questions</span>
+            <br>
+        </div>
+
+        <div id="detxt" class="inbox"></div>
+        <div id="pltxt" class="inbox invisible"></div>
+
+        <div id="textentry"><textarea id="outbox" rows="4"></textarea>
+        </div>
+
+        <table id="tabs">
+            <td onclick="SwitchViews()" class="tab"> DECRYPTED
+            <td onclick="SwitchViews()" class="tab inactive"> ENCRYPTED
+        </table>
+
+    </div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
+<script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
+<script src="chrypt.js"></script>
+
+</html>

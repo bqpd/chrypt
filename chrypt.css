@@ -1,0 +1,90 @@
+body {  color: #222;
+        font-family: Arial, arial;
+        background-color: #707070;
+        font-size: 12.8px; }
+#chatwindow {   margin: 0 auto;
+        max-width: 20em; }
+table { width: 100%; 
+        text-align: center; }
+a { color: #0065cc; }
+
+#header {   text-align: center;
+            background-color: rgb(64,64,64);
+            color: white;
+            font-size: 2em; }
+#key { width: 30%; cursor: pointer; }
+#status {   width: 10%;
+            padding: 0.25em 0.5em;
+            cursor: default; }
+#chan {
+    text-align: center;
+    border: none;
+    background: none;
+    width: 80%;
+    color: white;
+    font-weight: 700; }
+
+#questionbox { 
+    background-color: #76DAFF;
+    padding-top: 1.5em;
+    padding-bottom: 0.5em; }
+.qbutton {
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 0.5em;
+    font-weight: 700;
+    font-size: 0.75 em;
+    color: rgb(64,64,64);
+    cursor: pointer;
+    margin-top: -1em; }
+.question { background-color: #aaa;
+            padding: 0.5em 0.35em; 
+            font-size: 1.5em; }
+.question td { color: rgb(64,64,64); }
+.closeq { font-size: 1.5em; cursor: pointer; }
+.submitq { font-size: 1.5em; color: white; opacity: 0; }
+.qbubble {  text-align: left;
+            padding: 0.5em 0.5em;
+            -moz-border-radius: 0.5em;
+            -webkit-border-radius: 0.5em;
+            border-radius: 0.5em;
+            font-weight: 700; }
+.qtxt {     background-color: rgba(255, 255, 255, 0.5);
+            -webkit-border-top-right-radius: 0;
+            -moz-border-radius-topright: 0;
+            border-top-right-radius: 0; }
+.answer {   border: none;
+            background-color: rgba(64, 64, 64, 0.5);
+            color: white;
+            -webkit-border-bottom-left-radius: 0;
+            -moz-border-radius-bottomleft: 0;
+            border-bottom-left-radius: 0;
+            width: 100%; }
+
+.inbox {    background-color: white;
+            word-wrap: break-word;
+            overflow-y: scroll;
+            min-height: 10em;
+            height: 23em;
+            padding: 0.5em;
+            padding-left: 1.5em;
+            text-indent: -1em; }
+.inbox p { margin: 0.25em; }
+.emote { color: #777; font-style: italic; }
+.notice { color: #aaa; }
+
+#textentry { padding: 0.35em;  background-color: white; text-align: center; color: #aaa; }
+#textentry textarea {   border: 1px solid;
+                        width: 100%;
+                        border-color: #777 #aaa #aaa #aaa;}
+
+.tab {  font-size: 0.75em;
+        padding: 0.25em;
+        background-color: white;
+        color: #777;
+        border-bottom: 1px solid #aaa; }
+.inactive { background-color: #aaa;
+            color: white;
+            cursor: pointer; }
+
+.invisible { display: none; }
+.selected { background-color: #76DAFF; }
