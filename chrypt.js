@@ -86,7 +86,10 @@ connectWS = function() {
             addChat("me", "/sys The connection has closed.")
             delayedConnect() }
         conn.onmessage = function (evt) {
-            addChat("them", evt.data) }
+            if (evt.data !== ">heartbeat<") {
+                addChat("them", evt.data)
+            }
+        }
     } else {
         addChat("me", "/sys Sadly, your browser does not support WebSockets.")
     }
@@ -251,3 +254,13 @@ last_thousandhash = getSecret(1000)
 addChat("me", "/sys Connecting to: "+host+"/socket/"+subd)
 
 $(document).ready(connectWS)
+
+var beat = true,
+    heartbeat = function() {
+        if (beat && conn.readyState === 1) {
+            conn.send(">heartbeat<")
+        }
+        setTimeout("heartbeat()", 30000)
+    }
+
+setTimeout("heartbeat()", 60000)

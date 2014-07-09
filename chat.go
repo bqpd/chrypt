@@ -117,7 +117,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
     path := r.URL.Path
     base := filepath.Base(path)
     isfile, _ := filepath.Match("*.*", base)
-    if isfile {
+    if !isfile {
         base = ""
     }
 
