@@ -74,7 +74,7 @@ $('#chan').text(subd)
 
 var last_connection_time = 0,
     connecting = false,
-    host = location.origin.replace(/^http/, "ws"),
+    host = "wss://protected-anchorage-9973.herokuapp.com",
     conn,
     client_id = Math.random().toString(36).slice(2).substring(0,13),
 
