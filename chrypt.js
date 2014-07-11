@@ -81,7 +81,9 @@ var last_connection_time = 0,
 connectWS = function() {
     if (window["WebSocket"]) {
         conn = new WebSocket(host+"/socket/"+subd)
-        setTimeout('conn.send(client_id)', 1000)
+        conn.onopen = function() {
+            conn.send(client_id)
+        }
         conn.onclose = function (evt) {
             addChat("me", "/sys The connection has closed.")
             delayedConnect() }
